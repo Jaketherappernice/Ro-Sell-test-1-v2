@@ -2,23 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Panel</title>
+  <title>Ro Sell - Admin</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-    body { font-family: sans-serif; }
-    .product { border: 1px solid #ccc; margin: 10px; padding: 10px; }
-    button { margin: 5px; }
+    body {
+      font-family: sans-serif;
+      background: #fdfdfd;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    form {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    input {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 15px;
+      background: #333;
+      color: white;
+      border: none;
+      margin: 5px 5px 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .product {
+      background: #fff;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-  <h1>Admin Panel</h1>
+  <h1>🛠️ Ro Sell Admin Panel</h1>
 
   <form id="productForm">
     <input type="hidden" id="productId" />
     <input type="text" id="name" placeholder="Product Name" required />
     <input type="text" id="description" placeholder="Product Description" required />
     <input type="text" id="price" placeholder="Product Price" required />
+    <input type="text" id="payment" placeholder="Payment Link (e.g., PayPal, GCash)" required />
     <button type="submit">Save Product</button>
     <button type="button" onclick="cancelEdit()">Cancel</button>
   </form>
@@ -43,6 +77,7 @@
     const nameInput = document.getElementById("name");
     const descInput = document.getElementById("description");
     const priceInput = document.getElementById("price");
+    const paymentInput = document.getElementById("payment");
     const idInput = document.getElementById("productId");
 
     form.addEventListener("submit", function (e) {
@@ -50,13 +85,15 @@
       const name = nameInput.value;
       const description = descInput.value;
       const price = priceInput.value;
+      const payment = paymentInput.value;
       const id = idInput.value;
+      const data = { name, description, price, payment };
 
       if (id) {
-        db.ref("products/" + id).set({ name, description, price });
+        db.ref("products/" + id).set(data);
       } else {
         const newProduct = db.ref("products").push();
-        newProduct.set({ name, description, price });
+        newProduct.set(data);
       }
 
       form.reset();
@@ -73,7 +110,7 @@
       db.ref("products").on("value", snapshot => {
         container.innerHTML = "";
         snapshot.forEach(child => {
-          const { name, description, price } = child.val();
+          const { name, description, price, payment } = child.val();
           const id = child.key;
           const div = document.createElement("div");
           div.className = "product";
@@ -81,7 +118,8 @@
             <strong>${name}</strong><br>
             ${description}<br>
             Price: ${price}<br>
-            <button onclick="editProduct('${id}', '${name}', '${description}', '${price}')">Edit</button>
+            Payment: <a href="${payment}" target="_blank">${payment}</a><br>
+            <button onclick="editProduct('${id}', '${name}', '${description}', '${price}', '${payment}')">Edit</button>
             <button onclick="deleteProduct('${id}')">Delete</button>
           `;
           container.appendChild(div);
@@ -89,10 +127,11 @@
       });
     }
 
-    function editProduct(id, name, description, price) {
+    function editProduct(id, name, description, price, payment) {
       nameInput.value = name;
       descInput.value = description;
       priceInput.value = price;
+      paymentInput.value = payment;
       idInput.value = id;
     }
 
